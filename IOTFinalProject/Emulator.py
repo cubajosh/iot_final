@@ -15,14 +15,6 @@ if 'weather' not in db.list_collection_names():
                          timeseries={'timeField': 'timestamp', 'metaField': 'id', 'granularity': 'seconds'}
 
                          )
-    db.weather.insert_one({
-
-        'timestamp': dt.datetime.now(),
-        'id': 1,
-        'temp': 40,
-        'humidity': 22,
-        'light levels': 150
-    })
 
 if __name__ == "__main__":
     while sensorOn:

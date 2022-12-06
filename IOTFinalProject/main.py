@@ -5,6 +5,7 @@ import Emulator as em
 app = Flask(__name__)
 app.config['DEBUG'] = True
 
+
 @app.route("/temps")
 def getAll():
     query = em.db.collection.find()
@@ -109,6 +110,192 @@ def getTempById(tempId):
             data.update({"id": tempId})
 
         for temp in data['temperatures']:
+            temp["timestamp"] = temp["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
+
+        return data
+    else:
+        return {"error": "Id does not exist"}, 404
+
+
+@app.route("/temps/humidity/<int:humidityId>")
+def getHumidityById(humidityId):
+    start = request.args.get("start")
+    end = request.args.get("end")
+
+    query = {"id": humidityId}
+    if start is None and end is not None:
+        try:
+            end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$lte": end}})
+
+    elif end is None and start is not None:
+        try:
+            start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$gte": start}})
+    elif start is not None and end is not None:
+        try:
+            start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+            end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$gte": start, "$lte": end}})
+
+    data = list(em.db.weather.aggregate([
+        {
+            '$match': query
+        }, {
+            '$group': {
+                '_id': '$humidityId',
+                'humidity levels': {
+                    '$push': {
+                        'humidity': '$humidity',
+                        'timestamp': '$timestamp'
+
+                    }
+                }
+            }
+        }
+    ]))
+
+    if data:
+        data = data[0]
+        if "_id" in data:
+            del data["_id"]
+            data.update({"id": humidityId})
+
+        for humid in data['humidity levels']:
+            humid["timestamp"] = humid["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
+
+        return data
+    else:
+        return {"error": "Id does not exist"}, 404
+
+
+@app.route("/temps/light/<int:lightId>")
+def getLightById(lightId):
+    start = request.args.get("start")
+    end = request.args.get("end")
+
+    query = {"id": lightId}
+    if start is None and end is not None:
+        try:
+            end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$lte": end}})
+
+    elif end is None and start is not None:
+        try:
+            start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$gte": start}})
+    elif start is not None and end is not None:
+        try:
+            start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+            end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$gte": start, "$lte": end}})
+
+    data = list(em.db.weather.aggregate([
+        {
+            '$match': query
+        }, {
+            '$group': {
+                '_id': '$lightId',
+                'light levels': {
+                    '$push': {
+                        'light levels': '$light levels',
+                        'timestamp': '$timestamp'
+
+                    }
+                }
+            }
+        }
+    ]))
+
+    if data:
+        data = data[0]
+        if "_id" in data:
+            del data["_id"]
+            data.update({"id": lightId})
+
+        for light in data['light levels']:
+            light["timestamp"] = light["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
+
+        return data
+    else:
+        return {"error": "Id does not exist"}, 404
+
+
+@app.route("/temps/temperatures/<int:tempId>")
+def getSingleTempById(tempId):
+    start = request.args.get("start")
+    end = request.args.get("end")
+
+    query = {"id": tempId}
+    if start is None and end is not None:
+        try:
+            end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$lte": end}})
+
+    elif end is None and start is not None:
+        try:
+            start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$gte": start}})
+    elif start is not None and end is not None:
+        try:
+            start = dt.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S")
+            end = dt.datetime.strptime(end, "%Y-%m-%dT%H:%M:%S")
+
+        except Exception as e:
+            return {"error": "timestamp not following format %Y-%m-%dT%H:%M:%S"}, 400
+
+        query.update({"timestamp": {"$gte": start, "$lte": end}})
+
+    data = list(em.db.weather.aggregate([
+        {
+            '$match': query
+        }, {
+            '$group': {
+                '_id': '$tempId',
+                'Temperatures': {
+                    '$push': {
+                        'temperatures': '$temp',
+                        'timestamp': '$timestamp'
+
+                    }
+                }
+            }
+        }
+    ]))
+
+    if data:
+        data = data[0]
+        if "_id" in data:
+            del data["_id"]
+            data.update({"id": tempId})
+
+        for temp in data['Temperatures']:
             temp["timestamp"] = temp["timestamp"].strftime("%Y-%m-%dT%H:%M:%S")
 
         return data
