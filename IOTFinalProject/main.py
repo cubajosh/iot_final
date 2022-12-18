@@ -328,17 +328,5 @@ def getSingleTempById(tempId):
     else:
         return {"error": "Id does not exist"}, 404
 
-    @app.route('/temps/', methods=["POST"])
-    def add_new_temp():
-        action = request.json['action']
-        if action not in ["locked", "unlocked"]:
-            return {"error", "wrong type of action submitted"}, 404
-
-        location = request.json['location']
-        userid = request.json['userid']
-        add_collection(action, location, userid)
-        return jsonify({"data saved": f"{location} was {action} by {userid}"})
-
-
 if __name__ == "__main__":
     app.run(port=5001)
