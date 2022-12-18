@@ -1,9 +1,35 @@
 from flask import Flask, request, jsonify
 import datetime as dt
 import Emulator as em
+import pymongo
+import datetime as dt
+import random
+from time import sleep
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+
+client = pymongo.MongoClient("mongodb+srv://balls:balls@tempproject.zkvxtwe.mongodb.net/?retryWrites=true&w=majority")
+db = client.test
+data_collections = db.data
+
+if 'weather' not in db.list_collection_names():
+    db.create_collection('weather',
+
+                         timeseries={'timeField': 'timestamp', 'metaField': 'id', 'granularity': 'seconds'}
+
+                         )
+
+def add_collection(inputId,inputTemp, inputHumidity, inputLightLevel):
+    test_document = {
+        'timestamp': dt.datetime.now(),
+        'id': inputId,
+        'temp': inputTemp,
+        'humidity': inputHumidity,
+        'light levels': inputLightLevel
+    }
+    data_collections.insert_one(test_document).inserted_id
+
 
 
 @app.route("/temps")
@@ -301,7 +327,6 @@ def getSingleTempById(tempId):
         return data
     else:
         return {"error": "Id does not exist"}, 404
-
 
 if __name__ == "__main__":
     app.run(port=5001)
